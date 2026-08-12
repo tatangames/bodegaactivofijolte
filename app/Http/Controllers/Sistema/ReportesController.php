@@ -147,7 +147,7 @@ class ReportesController extends Controller
             ]);
         }
 
-        $totalColumnaFmt = "$" . number_format((float)$totalColumna, 6, '.', ',');
+        $totalColumnaFmt = "$" . number_format((float)$totalColumna, 4, '.', ',');
         $arrayDetalle = $arrayDetalle->sortBy('nombreMaterial')->values();
         $arrayPendientes = $arrayPendientes->sortBy('nombreMaterial')->values();
         $fechaFormat = date("d-m-Y", strtotime(Carbon::now('America/El_Salvador')));
@@ -677,15 +677,15 @@ ORDER BY codigo, descripcion
         <td>{$i}</td>
         <td>" . e($r->codigo ?? '') . "</td>
         <td>" . e($r->descripcion ?? '') . "</td>
-        <td style='text-align:right'>$" . number_format($r->precio ?? 0, 6) . "</td>
+        <td style='text-align:right'>$" . number_format($r->precio ?? 0, 4) . "</td>
         <td style='text-align:right'>" . number_format($r->saldo_inicial_cant ?? 0) . "</td>
-        <td style='text-align:right'>$" . number_format($r->saldo_inicial_money ?? 0, 6) . "</td>
+        <td style='text-align:right'>$" . number_format($r->saldo_inicial_money ?? 0, 4) . "</td>
         <td style='text-align:right'>" . number_format($r->entradas_mes_cant ?? 0) . "</td>
-        <td style='text-align:right'>$" . number_format($r->entradas_mes_money ?? 0, 6) . "</td>
+        <td style='text-align:right'>$" . number_format($r->entradas_mes_money ?? 0, 4) . "</td>
         <td style='text-align:right'>" . number_format($r->salidas_mes_cant ?? 0) . "</td>
-        <td style='text-align:right'>$" . number_format($r->salidas_mes_money ?? 0, 6) . "</td>
+        <td style='text-align:right'>$" . number_format($r->salidas_mes_money ?? 0, 4) . "</td>
         <td style='text-align:right'>" . number_format($r->saldo_final_cant ?? 0) . "</td>
-        <td style='text-align:right'>$" . number_format($r->saldo_final_money ?? 0, 6) . "</td>
+        <td style='text-align:right'>$" . number_format($r->saldo_final_money ?? 0, 4) . "</td>
     </tr>
 ";
             $i++;
@@ -701,13 +701,13 @@ ORDER BY codigo, descripcion
         <tr style='font-weight:bold; background:#f9fafb'>
             <td colspan='4' style='text-align:right'>Totales:</td>
             <td style='text-align:right'>" . number_format($totales['inicial_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($totales['inicial_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($totales['inicial_money'], 4) . "</td>
             <td style='text-align:right'>" . number_format($totales['entradas_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($totales['entradas_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($totales['entradas_money'], 4) . "</td>
             <td style='text-align:right'>" . number_format($totales['salidas_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($totales['salidas_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($totales['salidas_money'], 4) . "</td>
             <td style='text-align:right'>" . number_format($totales['final_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($totales['final_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($totales['final_money'], 4) . "</td>
         </tr>
     </tfoot>
 </table>
@@ -727,17 +727,17 @@ ORDER BY codigo, descripcion
     <tr>
         <td>Ingresó (Entradas del mes)</td>
         <td style='text-align:right'>" . number_format($totales['entradas_cant']) . "</td>
-        <td style='text-align:right'>$" . number_format($totales['entradas_money'], 6) . "</td>
+        <td style='text-align:right'>$" . number_format($totales['entradas_money'], 4) . "</td>
     </tr>
     <tr>
         <td>Salió (Salidas del mes)</td>
         <td style='text-align:right'>" . number_format($totales['salidas_cant']) . "</td>
-        <td style='text-align:right'>$" . number_format($totales['salidas_money'], 6) . "</td>
+        <td style='text-align:right'>$" . number_format($totales['salidas_money'], 4) . "</td>
     </tr>
     <tr>
         <td>Disponible al cierre (Saldo final)</td>
         <td style='text-align:right'>" . number_format($totales['final_cant']) . "</td>
-        <td style='text-align:right'>$" . number_format($totales['final_money'], 6) . "</td>
+        <td style='text-align:right'>$" . number_format($totales['final_money'], 4) . "</td>
     </tr>
 </table>
 ";
@@ -774,13 +774,13 @@ ORDER BY codigo, descripcion
             <td>{$j}</td>
             <td>" . e($s['codigo']) . "</td>
             <td style='text-align:right'>" . number_format($s['inicial_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($s['inicial_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($s['inicial_money'], 4) . "</td>
             <td style='text-align:right'>" . number_format($s['entradas_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($s['entradas_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($s['entradas_money'], 4) . "</td>
             <td style='text-align:right'>" . number_format($s['salidas_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($s['salidas_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($s['salidas_money'], 4) . "</td>
             <td style='text-align:right'>" . number_format($s['final_cant']) . "</td>
-            <td style='text-align:right'>$" . number_format($s['final_money'], 6) . "</td>
+            <td style='text-align:right'>$" . number_format($s['final_money'], 4) . "</td>
         </tr>
     ";
                 $j++;
@@ -789,7 +789,7 @@ ORDER BY codigo, descripcion
             $html .= "
         <tr style='font-weight:bold; background:#f9fafb'>
             <td colspan='9' style='text-align:right'>TOTAL</td>
-            <td style='text-align:right'>$" . number_format($totalSaldoFinalCodigos, 6) . "</td>
+            <td style='text-align:right'>$" . number_format($totalSaldoFinalCodigos, 4) . "</td>
         </tr>
         </tbody>
     </table>
@@ -853,8 +853,8 @@ ORDER BY codigo, descripcion
                 'nombreMaterial' => $material->nombre ?? '',
                 'unidadMedida' => $material->unidadMedida->nombre ?? '',
                 'cantidadSalida' => $fila->cantidad_salida,
-                'precioFormat' => "$" . number_format($precio, 6, '.', ','),
-                'multiplicado' => "$" . number_format((float)$multiplicado, 6, '.', ','),
+                'precioFormat' => "$" . number_format($precio, 4, '.', ','),
+                'multiplicado' => "$" . number_format((float)$multiplicado, 4, '.', ','),
                 'numeroSolicitud' => $fila->numero_solicitud ?? '',
                 'descripcion' => $fila->descripcion ?? '',
                 'estado' => $fila->estado,
