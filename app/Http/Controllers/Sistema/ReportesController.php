@@ -43,7 +43,6 @@ class ReportesController extends Controller
 
         $totalColumna = 0;
         $arrayDetalle = collect();
-        $arrayPendientes = collect();
 
         foreach ($arrayInfo as $fila) {
 
@@ -61,45 +60,6 @@ class ReportesController extends Controller
             $cantidadActual =
                 (int)$fila->cantidad_inicial
                 - (int)$totalSalido;
-
-            // ==========================================
-            // SOLO PENDIENTES
-            // ==========================================
-            $pendientesQuery = SalidasDetalle::where(
-                'id_entrada_detalle',
-                $fila->id
-            )
-                ->where('estado', 'pendiente')
-                ->orderBy('id', 'asc')
-                ->get();
-
-            foreach ($pendientesQuery as $pend) {
-
-                $entregas =
-                    SalidasDetalleEntregas::where(
-                        'id_salida_detalle',
-                        $pend->id
-                    )
-                        ->orderBy('fecha_entrega', 'asc')
-                        ->get();
-
-                $arrayPendientes->push((object)[
-                    'nombreMaterial' =>
-                        $material->nombre ?? '',
-
-                    'cantidad_salida' =>
-                        $pend->cantidad_salida,
-
-                    'unidadMedida' =>
-                        $material->unidadMedida->nombre ?? '',
-
-                    'descripcion' =>
-                        $pend->descripcion ?? '',
-
-                    'entregas' =>
-                        $entregas,
-                ]);
-            }
 
             // ==========================================
             // SOLO EXISTENCIAS > 0
@@ -129,7 +89,7 @@ class ReportesController extends Controller
                 'precioFormat' =>
                     "$" . number_format(
                         (float)$fila->precio,
-                        6,
+                        4,
                         '.',
                         ','
                     ),
@@ -137,7 +97,7 @@ class ReportesController extends Controller
                 'multiplicado' =>
                     "$" . number_format(
                         (float)$multiplicado,
-                        6,
+                        4,
                         '.',
                         ','
                     ),
@@ -149,7 +109,6 @@ class ReportesController extends Controller
 
         $totalColumnaFmt = "$" . number_format((float)$totalColumna, 4, '.', ',');
         $arrayDetalle = $arrayDetalle->sortBy('nombreMaterial')->values();
-        $arrayPendientes = $arrayPendientes->sortBy('nombreMaterial')->values();
         $fechaFormat = date("d-m-Y", strtotime(Carbon::now('America/El_Salvador')));
 
         $mpdf = new \Mpdf\Mpdf([
@@ -175,7 +134,7 @@ class ReportesController extends Controller
             </h1>
         </td>
         <td style='width: 10%; text-align: right;'>
-            <img src='$logoalcaldia' alt='Gobierno de El Salvador' style='max-width: 60px; height: auto;'>
+
         </td>
     </tr>
 </table>
@@ -274,156 +233,12 @@ class ReportesController extends Controller
     </tr>
 </tbody></table>";
 
-        // ── Tabla de pendientes ──
-        if ($arrayPendientes->isNotEmpty()) {
-
-            $tabla .= "
-    <div style='text-align: left; margin-top: 25px;'>
-        <h1 style='font-size: 14px; margin: 0; color: #000;'>
-            KITS PENDIENTES / ABIERTOS
-        </h1>
-    </div>
-    ";
-
-            $tabla .= "
-    <table id='tablaPendientes'
-           style='width: 100%;
-                  border-collapse: collapse;
-                  margin-top: 10px'>
-
-        <tbody>
-
-            <tr>
-
-                <th style='text-align:center;
-                           font-size:14px;
-                           width:28%;
-                           font-weight:bold;
-                           border:1px solid black;'>
-
-                    Producto
-                </th>
-
-                <th style='text-align:center;
-                           font-size:14px;
-                           width:12%;
-                           font-weight:bold;
-                           border:1px solid black;'>
-
-                    Cant. Salida
-                </th>
-
-                <th style='text-align:center;
-                           font-size:14px;
-                           width:25%;
-                           font-weight:bold;
-                           border:1px solid black;'>
-
-                    Descripción Salida
-                </th>
-
-                <th style='text-align:center;
-                           font-size:14px;
-                           width:35%;
-                           font-weight:bold;
-                           border:1px solid black;'>
-
-                    Detalle de entregas
-                </th>
-
-            </tr>
-    ";
-
-            foreach ($arrayPendientes as $pend) {
-
-                $detalleEntregas = '';
-
-                if ($pend->entregas->isEmpty()) {
-
-                    $detalleEntregas =
-                        "<span style='font-style: italic; color:#888;'>
-                    Sin entregas registradas
-                </span>";
-
-                } else {
-
-                    $lineas = [];
-
-                    foreach ($pend->entregas as $ent) {
-
-                        $fechaEnt = date(
-                            'd-m-Y',
-                            strtotime($ent->fecha_entrega)
-                        );
-
-                        $obs = $ent->observacion ?: '';
-
-                        $lineas[] =
-                            "{$ent->cantidad} {$pend->unidadMedida} - {$obs}";
-                    }
-
-                    $detalleEntregas = implode('<br>', $lineas);
-                }
-
-                $descripcionSalida =
-                    !empty($pend->descripcion)
-                        ? $pend->descripcion
-                        : '-';
-
-                $tabla .= "
-        <tr>
-
-            <td style='text-align:left;
-                       font-size:14px;
-                       border:1px solid black;
-                       padding:3px;
-                       vertical-align:top;'>
-
-                {$pend->nombreMaterial}
-            </td>
-
-            <td style='text-align:center;
-                       font-size:14px;
-                       border:1px solid black;
-                       vertical-align:top;'>
-
-                {$pend->cantidad_salida}
-                {$pend->unidadMedida}
-            </td>
-
-            <td style='text-align:left;
-                       font-size:13px;
-                       border:1px solid black;
-                       padding:3px;
-                       vertical-align:top;'>
-
-                {$descripcionSalida}
-            </td>
-
-            <td style='text-align:left;
-                       font-size:14px;
-                       border:1px solid black;
-                       padding:3px;'>
-
-                {$detalleEntregas}
-            </td>
-
-        </tr>";
-            }
-
-            $tabla .= "
-        </tbody>
-    </table>";
-        }
-
         $stylesheet = file_get_contents('css/cssbodega.css');
         $mpdf->WriteHTML($stylesheet, 1);
         $mpdf->setFooter('Página: {PAGENO}/{nb}');
         $mpdf->WriteHTML($tabla, 2);
         $mpdf->Output();
     }
-
-
     public function reportePDFInicialPorPeriodos($desde, $hasta)
     {
         $start = Carbon::parse($desde)->startOfDay();
@@ -623,15 +438,15 @@ ORDER BY codigo, descripcion
             <table width='100%' style='font-size:10px;'>
                 <tr>
                     <td width='40%' style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Código:</strong></td>
-                    <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>PROV-002-REPO</td>
+                    <td width='60%' style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'></td>
                 </tr>
                 <tr>
                     <td style='border-right:0.8px solid #000; border-bottom:0.8px solid #000; padding:4px 6px;'><strong>Versión:</strong></td>
-                    <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'>000</td>
+                    <td style='border-bottom:0.8px solid #000; padding:4px 6px; text-align:center;'></td>
                 </tr>
                 <tr>
                     <td style='border-right:0.8px solid #000; padding:4px 6px;'><strong>Fecha de vigencia:</strong></td>
-                    <td style='padding:4px 6px; text-align:center;'>22/12/2025</td>
+                    <td style='padding:4px 6px; text-align:center;'></td>
                 </tr>
             </table>
         </td>
@@ -804,7 +619,7 @@ ORDER BY codigo, descripcion
 <div style='text-align:center; font-size:16px;'>
     F._____________________________<br><br>
     <span style='display:block; margin-top:8px; font-weight:bold; font-size:16px;'>
-        Unidad de Proveeduría y Bodega
+        Unidad de Inventario y Activo Fijo
     </span>
 </div>
 ";
@@ -902,7 +717,7 @@ ORDER BY codigo, descripcion
                                 padding:3px 5px; font-weight:bold; color:#000000;'>Código:</td>
                     <td style='border-bottom:0.8px solid #000; padding:3px 5px;
                                 text-align:center; color:#000000;'>
-                        PROV-001-FICH
+
                     </td>
                 </tr>
                 <tr>
@@ -910,13 +725,13 @@ ORDER BY codigo, descripcion
                                 padding:3px 5px; font-weight:bold; color:#000000;'>Versión:</td>
                     <td style='border-bottom:0.8px solid #000; padding:3px 5px;
                                 text-align:center; color:#000000;'>
-                        001
+
                     </td>
                 </tr>
                 <tr>
                     <td style='border-right:0.8px solid #000; padding:3px 5px;
                                 font-weight:bold; color:#000000;'>Vigencia:</td>
-                    <td style='padding:3px 5px; text-align:center; color:#000000;'>09/07/2026</td>
+                    <td style='padding:3px 5px; text-align:center; color:#000000;'></td>
                 </tr>
             </table>
         </td>
@@ -985,7 +800,7 @@ ORDER BY codigo, descripcion
 
 <div style='text-align:left; font-size:13px;'>
     Ficha generada por:<br><br><br><br>
-    <strong>Unidad de proveeduría y bodega</strong>
+    <strong>Unidad de Inventario y Activo Fijo</strong>
 </div>
 
     ";
@@ -1066,7 +881,7 @@ ORDER BY codigo, descripcion
                                 padding:3px 5px; font-weight:bold; color:#000000;'>Código:</td>
                     <td style='border-bottom:0.8px solid #000; padding:3px 5px;
                                 text-align:center; color:#000000;'>
-                        PROV-003-REPO
+
                     </td>
                 </tr>
                 <tr>
@@ -1074,13 +889,13 @@ ORDER BY codigo, descripcion
                                 padding:3px 5px; font-weight:bold; color:#000000;'>Versión:</td>
                     <td style='border-bottom:0.8px solid #000; padding:3px 5px;
                                 text-align:center; color:#000000;'>
-                        000
+
                     </td>
                 </tr>
                 <tr>
                     <td style='border-right:0.8px solid #000; padding:3px 5px;
                                 font-weight:bold; color:#000000;'>Vigencia:</td>
-                    <td style='padding:3px 5px; text-align:center; color:#000000;'>09/07/2026</td>
+                    <td style='padding:3px 5px; text-align:center; color:#000000;'></td>
                 </tr>
             </table>
         </td>
@@ -1170,7 +985,7 @@ ORDER BY codigo, descripcion
     <div style='text-align:left; font-size:14px;'>
         F._____________________________<br>
         <span style='display:block; margin-top:2px; font-weight:bold; font-size:14px;'>
-            Unidad de proveeduría y bodega
+            Unidad de Inventario y Activo Fijo
         </span>
     </div>";
 

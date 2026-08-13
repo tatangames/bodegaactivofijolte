@@ -137,7 +137,10 @@
                             <div class="card-body">
 
                                 <div class="form-group">
-                                    <label>Material <span class="text-danger">*</span></label>
+                                    <label>
+                                        Material <span class="text-danger">*</span>
+                                        <small class="text-muted">La búsqueda muestra el nombre y la unidad de medida.</small>
+                                    </label>
                                     <table class="table" id="matriz-busqueda">
                                         <tbody>
                                         <tr>

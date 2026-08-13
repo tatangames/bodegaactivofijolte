@@ -146,7 +146,7 @@
                                                 <span class="badge-global">global</span>
                                                 <small class="text-muted">(Opcional)</small>
                                             </label>
-                                            <select class="form-control" id="departamento_global">
+                                            <select class="form-control" id="departamento_global" style="width:100%">
                                                 <option value="">Sin departamento</option>
                                                 @foreach($arrayDepartamentos as $dep)
                                                     <option value="{{ $dep->id }}">{{ $dep->nombre }}</option>
@@ -282,14 +282,13 @@
                                 <thead>
                                 <tr>
                                     <th style="width:3%;  min-width:40px">#</th>
-                                    <th style="width:14%; min-width:120px">Material</th>
-                                    <th style="width:5%;  min-width:60px" class="text-center">Cant.</th>
-                                    <th style="width:10%; min-width:120px">Fecha</th>
-                                    <th style="width:10%; min-width:110px">N° Solicitud</th>
-                                    <th style="width:16%; min-width:140px">Descripción</th>
-                                    <th style="width:16%; min-width:140px">Departamento</th>
-                                    <th style="width:11%; min-width:110px" class="text-center">Estado</th>
-                                    <th style="width:7%;  min-width:70px">Opciones</th>
+                                    <th style="width:18%; min-width:120px">Material</th>
+                                    <th style="width:6%;  min-width:60px" class="text-center">Cant.</th>
+                                    <th style="width:12%; min-width:120px">Fecha</th>
+                                    <th style="width:12%; min-width:110px">N° Solicitud</th>
+                                    <th style="width:20%; min-width:140px">Descripción</th>
+                                    <th style="width:20%; min-width:140px">Departamento</th>
+                                    <th style="width:9%;  min-width:70px">Opciones</th>
                                 </tr>
                                 </thead>
                                 <tbody></tbody>
@@ -330,17 +329,23 @@
 
         var seguroBuscador = true;
 
+        // Configuración Select2 reutilizable
+        var select2Config = {
+            theme: 'bootstrap-5',
+            dropdownParent: $('body'),
+            language: { noResults: function () { return 'No encontrado'; } }
+        };
+
         $(function () {
-            $('#select-tiposalida').select2({
-                theme: 'bootstrap-5',
-                dropdownParent: $('body'),
-                language: { noResults: function () { return 'No encontrado'; } }
-            });
+            $('#select-tiposalida').select2(select2Config);
 
             $('#select-tiposalida').on('change', function () {
                 var val = $(this).val();
                 $('#botonaddmaterial').prop('disabled', !val || val === '');
             });
+
+            // ── Select2 en departamento global ────────────────────────
+            $('#departamento_global').select2(select2Config);
 
             $(document).click(function () { $('.droplista').hide(); });
         });
@@ -458,9 +463,7 @@
             var fechaGlobal       = document.getElementById('fecha_global_item').value;
             var solicitudGlobal   = document.getElementById('numero_solicitud_global').value;
             var descripcionGlobal = document.getElementById('descripcion_global').value;
-            var deptoGlobalVal    = document.getElementById('departamento_global').value;
-            var deptoGlobalText   = document.getElementById('departamento_global')
-                .options[document.getElementById('departamento_global').selectedIndex].text;
+            var deptoGlobalVal    = $('#departamento_global').val();
 
             var nombreTexto = document.getElementById('info-material').value;
 
@@ -518,20 +521,11 @@
                         'value="' + descripcionGlobal + '">' +
                         '</td>' +
 
-                        // Departamento por fila (pre-selecciona global)
+                        // Departamento por fila (se inicializa Select2 después del append)
                         '<td>' +
-                        '<select name="departamentoArray[]" class="form-control form-control-sm">' +
+                        '<select name="departamentoArray[]" class="form-control form-control-sm select2-depto" style="width:100%">' +
                         deptoOptions +
                         '</select>' +
-                        '</td>' +
-
-                        // Estado toggle
-                        '<td class="text-center">' +
-                        '<input name="estadoArray[]" type="hidden" data-estadoSalida="finalizado">' +
-                        '<button type="button" class="btn btn-success btn-sm btn-estado" ' +
-                        'onclick="toggleEstado(this)" data-estado="finalizado">' +
-                        '<i class="fas fa-check-circle mr-1"></i> Finalizado' +
-                        '</button>' +
                         '</td>' +
 
                         // Opciones
@@ -541,7 +535,11 @@
                         '</button>' +
                         '</td>' +
                         '</tr>';
+
                     $('#matriz tbody').append(fila);
+
+                    // ── Inicializar Select2 en el select recién agregado ──
+                    $('#matriz tbody tr:last-child select.select2-depto').select2(select2Config);
                 }
             }
 
@@ -549,29 +547,6 @@
             document.getElementById('inputBuscador').value = '';
             $('.droplista').html('').hide();
             toastr.success('Material agregado al detalle');
-        }
-
-
-        // ── Toggle estado por fila ────────────────────────────────────
-        function toggleEstado(btn) {
-            var estadoActual = $(btn).attr('data-estado');
-            var hiddenEstado = $(btn).siblings('input[name="estadoArray[]"]');
-
-            if (estadoActual === 'pendiente') {
-                $(btn)
-                    .attr('data-estado', 'finalizado')
-                    .removeClass('btn-warning')
-                    .addClass('btn-success')
-                    .html('<i class="fas fa-check-circle mr-1"></i> Finalizado');
-                hiddenEstado.attr('data-estadoSalida', 'finalizado');
-            } else {
-                $(btn)
-                    .attr('data-estado', 'pendiente')
-                    .removeClass('btn-success')
-                    .addClass('btn-warning')
-                    .html('<i class="fas fa-clock mr-1"></i> Pendiente');
-                hiddenEstado.attr('data-estadoSalida', 'pendiente');
-            }
         }
 
         // ── Guardar salida ────────────────────────────────────────────
@@ -590,7 +565,6 @@
             });
         }
 
-
         function guardarSalida() {
             var tiposalida = document.getElementById('select-tiposalida').value;
 
@@ -604,7 +578,7 @@
             var fechaGlobal       = document.getElementById('fecha_global_item').value;
             var solicitudGlobal   = document.getElementById('numero_solicitud_global').value;
             var descripcionGlobal = document.getElementById('descripcion_global').value.trim();
-            var deptoGlobal       = document.getElementById('departamento_global').value;
+            var deptoGlobal       = $('#departamento_global').val();
 
             // ── Validar fecha obligatoria por fila ────────────────────────────────
             var sinFecha       = false;
@@ -623,31 +597,6 @@
 
             if (sinFecha) {
                 toastr.error('Fila #' + filaFechaError + ': La fecha es obligatoria (complétala en la fila o en el campo global)');
-                return;
-            }
-
-            // ── Validar descripción obligatoria si estado es PENDIENTE ────────────
-            var sinDescripcion = false;
-            var filaDescError  = 0;
-
-            $('#matriz tbody tr').each(function (index) {
-                var estadoFila = $(this).find('input[name="estadoArray[]"]').attr('data-estadoSalida');
-
-                if (estadoFila === 'pendiente') {
-                    var descFila  = $(this).find('input[name="descripcionItemArray[]"]').val().trim();
-                    var descFinal = descripcionGlobal !== '' ? descripcionGlobal : descFila;
-
-                    if (!descFinal || descFinal === '') {
-                        sinDescripcion = true;
-                        filaDescError  = index + 1;
-                        $(this).css('background', '#f8d7da');
-                        return false;
-                    }
-                }
-            });
-
-            if (sinDescripcion) {
-                toastr.error('Fila #' + filaDescError + ': La descripción es obligatoria cuando el estado es Pendiente');
                 return;
             }
 
@@ -680,8 +629,6 @@
                 .map(function () { return $(this).attr('data-idmaterialArray'); }).get();
             var salidaCantidad        = $("input[name='salidaArray[]']")
                 .map(function () { return $(this).attr('data-cantidadSalida'); }).get();
-            var salidaEstado          = $("input[name='estadoArray[]']")
-                .map(function () { return $(this).attr('data-estadoSalida'); }).get();
             var salidaDepartamento    = $("select[name='departamentoArray[]']")
                 .map(function () { return $(this).val(); }).get();
             var salidaFechaItem       = $("input[name='fechaItemArray[]']")
@@ -693,15 +640,14 @@
 
             var contenedorArray = [];
             for (var p = 0; p < salidaCantidad.length; p++) {
-                var fechaFinal       = (fechaGlobal       && fechaGlobal       !== '') ? fechaGlobal                       : (salidaFechaItem[p]       || '');
-                var solicitudFinal   = (solicitudGlobal   && solicitudGlobal   !== '') ? solicitudGlobal                   : (salidaSolicitudItem[p]   || '');
-                var descripcionFinal = (descripcionGlobal && descripcionGlobal !== '') ? descripcionGlobal                 : (salidaDescripcionItem[p] || '');
-                var deptoFinal       = (deptoGlobal       && deptoGlobal       !== '') ? deptoGlobal                       : (salidaDepartamento[p]    || '');
+                var fechaFinal       = (fechaGlobal       && fechaGlobal       !== '') ? fechaGlobal       : (salidaFechaItem[p]       || '');
+                var solicitudFinal   = (solicitudGlobal   && solicitudGlobal   !== '') ? solicitudGlobal   : (salidaSolicitudItem[p]   || '');
+                var descripcionFinal = (descripcionGlobal && descripcionGlobal !== '') ? descripcionGlobal : (salidaDescripcionItem[p] || '');
+                var deptoFinal       = (deptoGlobal       && deptoGlobal       !== '') ? deptoGlobal       : (salidaDepartamento[p]    || '');
 
                 contenedorArray.push({
                     infoIdEntradaDeta:   idEntradaDetalle[p],
                     infoCantidad:        salidaCantidad[p],
-                    infoEstado:          salidaEstado[p],
                     infoTipoSalida:      tiposalida,
                     infoDepartamento:    deptoFinal,
                     infoFechaItem:       fechaFinal,
@@ -747,19 +693,20 @@
                             confirmButtonColor: '#d33',
                             confirmButtonText: 'Entendido'
                         });
-                    }
-                    else {
+                    } else {
                         toastr.error('Error al guardar');
                     }
                 })
                 .catch(function () { closeLoading(); toastr.error('Error al guardar'); });
         }
 
-
-
         // ── Utilidades ────────────────────────────────────────────────
         function borrarFila(btn) {
-            $(btn).closest('tr').remove();
+            var $fila = $(btn).closest('tr');
+            // Destruir Select2 antes de remover la fila (evita memory leaks)
+            var $sel = $fila.find('select[name="departamentoArray[]"]');
+            if ($sel.data('select2')) $sel.select2('destroy');
+            $fila.remove();
             renumerarFilas();
         }
 

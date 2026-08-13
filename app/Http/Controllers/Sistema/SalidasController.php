@@ -45,7 +45,7 @@ class SalidasController extends Controller
         $contenedor = json_decode($request->contenedorArray, true);
         if (empty($contenedor)) return ['success' => 0];
 
-        // Validar que todos los items traigan tiposalida
+        // Validar que todos los ítems traigan tiposalida
         foreach ($contenedor as $item) {
             if (empty($item['infoTipoSalida'])) return ['success' => 0];
         }
@@ -54,7 +54,7 @@ class SalidasController extends Controller
 
         try {
 
-            // ── Acumular cantidades por id_entrada_detalle ────────────────
+            // ── Acumular cantidades por id_entrada_detalle ────────
             $acumulado = [];
             foreach ($contenedor as $item) {
                 $id = $item['infoIdEntradaDeta'];
@@ -62,8 +62,8 @@ class SalidasController extends Controller
                 $acumulado[$id] += (int) $item['infoCantidad'];
             }
 
-            // ── Validar stock acumulado + obtener fecha de entrada ────────
-            $fechasEntrada = []; // cache: id_entrada_detalle => fecha de entrada
+            // ── Validar stock acumulado + cachear fechas de entrada ──
+            $fechasEntrada = [];
 
             foreach ($acumulado as $idEntradaDetalle => $cantidadSalida) {
 
@@ -80,11 +80,11 @@ class SalidasController extends Controller
 
                 $fechasEntrada[$idEntradaDetalle] = $entradaInfo->fecha;
 
-                $totalSalido = DB::table('salidas_detalle')
+                $totalSalido = (int) DB::table('salidas_detalle')
                     ->where('id_entrada_detalle', $idEntradaDetalle)
                     ->sum('cantidad_salida');
 
-                $disponible = (int) $entradaInfo->cantidad_inicial - (int) $totalSalido;
+                $disponible = (int) $entradaInfo->cantidad_inicial - $totalSalido;
 
                 if ($cantidadSalida > $disponible) {
                     DB::rollback();
@@ -103,7 +103,7 @@ class SalidasController extends Controller
                 }
             }
 
-            // ── Validar fecha de salida no menor a la fecha de entrada (por ítem) ──
+            // ── Validar fecha de salida no anterior a fecha de entrada ──
             foreach ($contenedor as $item) {
                 $idEntradaDetalle = $item['infoIdEntradaDeta'];
                 $fechaSalidaItem  = $item['infoFechaItem'] ?? null;
@@ -133,17 +133,13 @@ class SalidasController extends Controller
                 }
             }
 
-            // ── Guardar cada ítem directo en salidas_detalle ──────────────
+            // ── Insertar cada ítem ────────────────────────────────
             foreach ($contenedor as $item) {
                 $detalle                     = new SalidasDetalle();
                 $detalle->id_entrada_detalle = (int) $item['infoIdEntradaDeta'];
                 $detalle->id_tiposalida      = (int) $item['infoTipoSalida'];
                 $detalle->cantidad_salida    = (int) $item['infoCantidad'];
-                $detalle->estado             = in_array($item['infoEstado'], ['pendiente', 'finalizado'])
-                    ? $item['infoEstado']
-                    : 'pendiente';
 
-                // Campos por ítem (ya vienen resueltos desde el JS — global sobreescribe fila)
                 $detalle->fecha            = !empty($item['infoFechaItem'])       ? $item['infoFechaItem']          : null;
                 $detalle->numero_solicitud = !empty($item['infoSolicitudItem'])   ? $item['infoSolicitudItem']      : null;
                 $detalle->descripcion      = !empty($item['infoDescripcionItem']) ? $item['infoDescripcionItem']    : null;
@@ -289,7 +285,6 @@ class SalidasController extends Controller
                 'sd.cantidad_salida',
                 'dep.nombre as departamento'
             )
-            ->where('sd.estado', 'pendiente')
             ->orderBy('sd.fecha', 'asc')
             ->orderBy('sd.id', 'asc')
             ->get();

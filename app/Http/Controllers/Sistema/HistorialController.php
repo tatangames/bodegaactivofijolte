@@ -316,7 +316,6 @@ class HistorialController extends Controller
                 'sd.numero_solicitud',
                 'sd.descripcion',
                 'sd.cantidad_salida',
-                'sd.estado',
                 'm.nombre as material',
                 'ts.nombre as tipo_salida',
                 'dep.nombre as departamento',
@@ -361,7 +360,6 @@ class HistorialController extends Controller
                 'sd.descripcion',
                 'sd.id_tiposalida',
                 'sd.id_departamento',
-                'sd.estado',
                 'ts.nombre as tipo_salida',
                 'dep.nombre as departamento'
             )
@@ -449,7 +447,6 @@ class HistorialController extends Controller
                 'sd.numero_solicitud',
                 'sd.descripcion',
                 'sd.cantidad_salida',
-                'sd.estado',
                 'm.nombre as material',
                 'ts.nombre as tipo_salida',
                 'dep.nombre as departamento'
