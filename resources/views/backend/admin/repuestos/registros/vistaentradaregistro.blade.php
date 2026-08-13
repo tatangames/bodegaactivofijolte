@@ -165,9 +165,9 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
-                                            <label>Precio (6 decimales) <span class="text-danger">*</span></label>
+                                            <label>Precio (4 decimales) <span class="text-danger">*</span></label>
                                             <input type="text" id="precio-producto" inputmode="decimal"
-                                                   class="form-control" autocomplete="off" placeholder="0.000000"
+                                                   class="form-control" autocomplete="off" placeholder="0.0000"
                                                    onkeypress="return validarDecimal(event, this)"
                                                    oninput="limitarDecimales(this, 6)">
                                         </div>
