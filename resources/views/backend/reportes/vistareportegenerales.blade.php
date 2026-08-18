@@ -118,9 +118,8 @@
                             <h5>Control de Entradas/Salidas por Período</h5>
                         </div>
                         <div class="reporte-body">
-                            <p style="font-size:13px; color:#666; margin-bottom:14px;">
-                                Muestra saldo inicial, entradas, salidas y saldo final de cada material dentro del rango de fechas seleccionado.
-                            </p>
+                            <p style="font-size:13px; color:#ff0000; margin-bottom:14px;">
+                                Si el material tuvo todas sus salidas en el mes, sí aparecerá; pero en el siguiente mes ya no aparecerá si ya no tiene unidades.                            </p>
                             <hr class="divider">
 
                             <div class="fecha-row">
