@@ -636,7 +636,7 @@ ORDER BY codigo, descripcion
                 <td style='height:6px; font-size:1px; line-height:6px;'>&nbsp;</td>
             </tr>
             <tr>
-                <td style='text-align:center; font-family:Arial,sans-serif; font-size:12px; font-weight:bold;'>
+                <td style='text-align:center; font-family:Arial,sans-serif; font-size:13px; font-weight:bold;'>
                     $infoGeneral->nombre_reporte
                 </td>
             </tr>
