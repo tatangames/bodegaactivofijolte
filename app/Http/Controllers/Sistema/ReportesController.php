@@ -30,8 +30,9 @@ class ReportesController extends Controller
     {
         $arrayDepartamento = Departamentos::orderBy('nombre')->get();
         $arrayMateriales = Materiales::orderBy('nombre')->get();
+        $informacionGeneral = InformacionGeneral::where('id', 1)->first();
 
-        return view('backend.reportes.vistareportegenerales', compact('arrayDepartamento', 'arrayMateriales'));
+        return view('backend.reportes.vistareportegenerales', compact('arrayDepartamento', 'arrayMateriales', 'informacionGeneral'));
     }
 
 
@@ -611,18 +612,38 @@ ORDER BY codigo, descripcion
 ";
         }
 
-        $infoGeneral = InformacionGeneral::where('id', 1)->first();
-        $spacer = "<div style='height: " . $infoGeneral->px_firmas . "px;'></div>";
+        // ── Config firmas ────────────────────────────────────────────────────
+        $infoGeneral = InformacionGeneral::find(1);
+        $pxFirmas = (int)($infoGeneral->px_firmas ?? 60);
+        $saltoPagina = (bool)($infoGeneral->salto_pagina ?? false);
+        $margenMm = round($pxFirmas * 0.264583);
+
+        // ══ FIRMA ════════════════════════════════════════════════════════════
+        if ($saltoPagina) {
+            $html .= '<pagebreak />';
+        }
+
+        $html .= "<div style='height:{$margenMm}mm; line-height:{$margenMm}mm; font-size:1px;'>&nbsp;</div>";
 
         $html .= "
-" . $spacer . "
-<div style='text-align:center; font-size:16px;'>
-    F._____________________________<br><br>
-    <span style='display:block; margin-top:8px; font-weight:bold; font-size:16px;'>
-        Unidad de Inventario y Activo Fijo
-    </span>
-</div>
-";
+        <table width='100%' style='border-collapse:collapse;'>
+            <tr>
+                <td style='text-align:center; font-family:Arial,sans-serif; font-size:13px;'>
+                    F._____________________________
+                </td>
+            </tr>
+            <tr>
+                <td style='height:6px; font-size:1px; line-height:6px;'>&nbsp;</td>
+            </tr>
+            <tr>
+                <td style='text-align:center; font-family:Arial,sans-serif; font-size:12px; font-weight:bold;'>
+                    $infoGeneral->nombre_reporte
+                </td>
+            </tr>
+        </table>
+        ";
+
+
 
         $mpdf->setFooter('Página {PAGENO} de {nb}');
         $mpdf->WriteHTML($html, \Mpdf\HTMLParserMode::HTML_BODY);
@@ -997,6 +1018,45 @@ ORDER BY codigo, descripcion
     }
 
 
+
+    public function actualizarPxInformacionGeneral(Request $request)
+    {
+        $rules = [
+            'nombre_reporte' => 'required|string|max:100',
+            'salto_pagina'   => 'required|boolean',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return ['success' => 0];
+        }
+
+        try {
+
+            $info = InformacionGeneral::find(1);
+
+            if (!$info) {
+                return ['success' => 0];
+            }
+
+            $info->nombre_reporte = $request->nombre_reporte;
+            $info->salto_pagina   = (int) $request->salto_pagina;
+            $info->px_firmas     = (int) $request->px_firmas;
+
+            $info->save();
+
+            return ['success' => 1];
+
+        } catch (\Throwable $e) {
+
+            Log::error(
+                'actualizarPxInformacionGeneral: ' . $e->getMessage()
+            );
+
+            return ['success' => 99];
+        }
+    }
 
 
 

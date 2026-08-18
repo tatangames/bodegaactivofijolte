@@ -150,7 +150,9 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/reporte/pdf/entregados/{desde}/{hasta}/{idunidad}', [ReportesController::class,'generarPDFEntregados']);
     Route::get('/admin/bodega/reportes/pdf/entregadopormaterial/{desde}/{hasta}/{idmaterial}', [ReportesController::class, 'reporteEntregadoPorMaterial']);
 
-
+    // --- ACTUALIZAR DISTANCIA FIRMAS ---
+    Route::post('/admin/informacion/actualizar/px', [ReportesController::class, 'actualizarPxInformacionGeneral'])
+        ->name('admin.informacion.actualizar.px');
 
 
 

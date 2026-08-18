@@ -234,6 +234,72 @@
 
 
 
+                {{-- ══ ENTRADAS / SALIDAS POR PERÍODO ══ --}}
+                <div class="col-md-4">
+                    <div class="reporte-card">
+
+                        <div class="reporte-header"
+                             style="background: linear-gradient(135deg, #6b4a1a, #e88e1a);">
+                            <i class="fas fa-exchange-alt"></i>
+                            <h5>Nombre para Firma en Reporte</h5>
+                        </div>
+
+                        <div class="reporte-body">
+
+                            <!-- Nombre -->
+                            <div class="fecha-row">
+                                <div class="fecha-box">
+                                    <label for="nombre-firma">Nombre</label>
+                                    <input type="text"
+                                           id="nombre-firma"
+                                           maxlength="100"
+                                           class="form-control form-control-sm"
+                                           value="{{ $informacionGeneral->nombre_reporte }}">
+                                </div>
+                            </div>
+
+                            <div class="fecha-row">
+                                <div class="fecha-box">
+                                    <label for="nombre-firma">Distancia para Firma</label>
+                                    <input type="number"
+                                           id="px_firmas"
+                                           class="form-control form-control-sm"
+                                           value="{{ $informacionGeneral->px_firmas }}">
+                                </div>
+                            </div>
+
+                            <!-- Salto de página -->
+                            <div class="mt-3">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox"
+                                           class="custom-control-input"
+                                           id="config-salto-pagina"
+                                        {{ ($informacionGeneral->salto_pagina ?? false) ? 'checked' : '' }}>
+
+                                    <label class="custom-control-label"
+                                           for="config-salto-pagina"
+                                           style="font-size: 13px; padding-top: 2px;">
+                                        Salto de página antes de firma
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Botón -->
+                            <div class="mt-3">
+                                <button type="button"
+                                        class="btn btn-primary"
+                                        onclick="guardarNombreReporte()">
+                                    <i class="fas fa-save mr-1"></i>
+                                    Guardar
+                                </button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
             </div>
         </div>
     </section>
@@ -330,6 +396,38 @@
 
             var url = "{{ url('admin/bodega/reportes/pdf/entregadopormaterial') }}/" + desde + '/' + hasta + '/' + idMat;
             window.open(url, '_blank');
+        }
+
+
+
+        function guardarNombreReporte(){
+            var nombreFirma = $('#nombre-firma').val().trim();
+            var saltoPagina = $('#config-salto-pagina').is(':checked') ? 1 : 0;
+            const px_firmas = $('#px_firmas').val().trim();
+
+            if (nombreFirma === '') {
+                toastr.error('Debe ingresar un nombre');
+                return;
+            }
+
+            axios.post("{{ route('admin.informacion.actualizar.px') }}", {
+                _token: '{{ csrf_token() }}',
+                nombre_reporte: nombreFirma,
+                salto_pagina: saltoPagina,
+                px_firmas: px_firmas,
+            })
+                .then(function (response) {
+
+                    if (response.data.success === 1) {
+                        toastr.success('Configuración actualizada correctamente');
+                    } else {
+                        toastr.error('No se pudo actualizar la configuración');
+                    }
+
+                })
+                .catch(function () {
+                    toastr.error('Ocurrió un error al guardar');
+                });
         }
 
     </script>
