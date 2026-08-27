@@ -1,3 +1,7 @@
+@php
+    $mesActual = \Carbon\Carbon::now()->startOfMonth();
+@endphp
+
 <table id="tabla-historial" class="table table-bordered table-striped table-hover mb-0">
     <thead class="thead-dark">
     <tr>
@@ -13,6 +17,10 @@
     </thead>
     <tbody>
     @forelse($arraySalidas as $dato)
+        @php
+            $esMesActual = \Carbon\Carbon::parse($dato->fecha)->month === $mesActual->month
+                        && \Carbon\Carbon::parse($dato->fecha)->year  === $mesActual->year;
+        @endphp
         <tr>
             <td>{{ $dato->id }}</td>
             <td data-order="{{ $dato->fecha ?? '' }}">
@@ -24,6 +32,8 @@
             <td>{{ $dato->material }}</td>
             <td class="text-center">{{ $dato->cantidad_salida }}</td>
             <td class="text-center">
+
+                {{-- Ver detalle: siempre visible --}}
                 <button type="button"
                         class="btn btn-info btn-xs"
                         style="margin:2px"
@@ -33,18 +43,23 @@
                         <span class="badge badge-light ml-1">{{ $dato->total_entregas }}</span>
                     @endif
                 </button>
-                <button type="button"
-                        class="btn btn-warning btn-xs"
-                        style="margin:2px"
-                        onclick="modalEditar({{ $dato->id }})">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button type="button"
-                        class="btn btn-danger btn-xs"
-                        style="margin:2px"
-                        onclick="eliminar({{ $dato->id }})">
-                    <i class="fas fa-trash"></i> Borrar
-                </button>
+
+                {{-- Editar y Borrar: solo mes actual --}}
+                @if($esMesActual)
+                    <button type="button"
+                            class="btn btn-warning btn-xs"
+                            style="margin:2px"
+                            onclick="modalEditar({{ $dato->id }})">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    <button type="button"
+                            class="btn btn-danger btn-xs"
+                            style="margin:2px"
+                            onclick="eliminar({{ $dato->id }})">
+                        <i class="fas fa-trash"></i> Borrar
+                    </button>
+                @endif
+
             </td>
         </tr>
     @empty
@@ -56,3 +71,7 @@
     @endforelse
     </tbody>
 </table>
+
+<script>
+    setTimeout(function () { closeLoading(); }, 400);
+</script>

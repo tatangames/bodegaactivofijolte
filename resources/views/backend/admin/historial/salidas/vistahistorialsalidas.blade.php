@@ -89,6 +89,7 @@
                         </div>
                     </div>
 
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
@@ -134,13 +135,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>Estado <span class="text-danger">*</span></label>
-                        <select id="editar-estado" class="form-control">
-                            <option value="finalizado">Finalizado</option>
-                            <option value="pendiente">Pendiente</option>
-                        </select>
-                    </div>
+
                     <div class="form-group">
                         <label>N° Solicitud <small class="text-muted">(Opcional)</small></label>
                         <input type="text" id="editar-solicitud" class="form-control" maxlength="100">
@@ -231,12 +226,14 @@
                 <div class="card card-gray-dark">
                     <div class="card-header">
                         <h3 class="card-title">Resultados</h3>
+                        <br>
+                        <p>Solo pordra Editar y Borrar del MES ACTUAL</p>
                         <div class="card-tools">
                             <span class="badge badge-info" id="badge-total" style="display:none"></span>
                         </div>
                     </div>
                     <br>
-                    <div class="card-body p-0" style="margin: 5px">
+                    <div class="card-body p-0" style="margin:5px">
                         <div id="div-instruccion" class="text-center text-muted py-5">
                             <i class="fas fa-search fa-3x mb-3 d-block"></i>
                             <p class="mb-0">Utiliza los filtros de arriba y presiona <strong>Buscar</strong> para ver el historial.</p>
@@ -292,7 +289,7 @@
             });
         });
 
-        // ── Inicializar DataTable ─────────────────────────────────────
+        // ── DataTable ─────────────────────────────────────────────────
         function initDataTable() {
             if ($.fn.DataTable.isDataTable('#tabla-historial')) {
                 $('#tabla-historial').DataTable().destroy();
@@ -307,6 +304,9 @@
                 responsive:   true,
                 pagingType:   'full_numbers',
                 lengthMenu:   [[50, 100, -1], [50, 100, 'Todo']],
+                columnDefs: [
+                    { targets: -1, orderable: false, searchable: false }
+                ],
                 language: {
                     sProcessing:   'Procesando...',
                     sLengthMenu:   'Mostrar _MENU_ registros',
@@ -327,7 +327,7 @@
                     "<'row align-items-center'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"
             });
             $('#tabla-historial_length select').addClass('form-control form-control-sm');
-            $('#tabla-historial_filter input').addClass('form-control form-control-sm').css('display','inline-block');
+            $('#tabla-historial_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
         }
 
         // ── Buscar con filtros ────────────────────────────────────────
@@ -340,12 +340,12 @@
             const material  = $('#filtro-material').val().trim();
             const solicitud = $('#filtro-solicitud').val().trim();
 
-            if (tipo)      params.append('tiposalida',  tipo);
+            if (tipo)      params.append('tiposalida',   tipo);
             if (depto)     params.append('departamento', depto);
-            if (desde)     params.append('fecha_desde', desde);
-            if (hasta)     params.append('fecha_hasta', hasta);
-            if (material)  params.append('material',    material);
-            if (solicitud) params.append('solicitud',   solicitud);
+            if (desde)     params.append('fecha_desde',  desde);
+            if (hasta)     params.append('fecha_hasta',  hasta);
+            if (material)  params.append('material',     material);
+            if (solicitud) params.append('solicitud',    solicitud);
 
             const url = RUTA_TABLA + (params.toString() ? '?' + params.toString() : '');
 
@@ -382,6 +382,9 @@
             $('#det-departamento').text('—');
             $('#det-material').text('—');
             $('#det-descripcion').text('—');
+            $('#det-entregas-tbody').html(
+                '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</td></tr>'
+            );
             $('#modalDetalle').modal('show');
 
             var formData = new FormData();
@@ -390,15 +393,40 @@
             axios.post(RUTA_DETALLE, formData)
                 .then(function (response) {
                     if (response.data.success !== 1) {
-                        toastr.error('Error al cargar el detalle'); return;
+                        toastr.error('Error al cargar el detalle');
+                        return;
                     }
+
                     var s = response.data.salida;
-                    $('#det-fecha').text(s.fecha              ? formatearFecha(s.fecha) : '—');
-                    $('#det-tipo').text(s.tipo_salida          || '—');
+                    $('#det-fecha').text(s.fecha               ? formatearFecha(s.fecha) : '—');
+                    $('#det-tipo').text(s.tipo_salida           || '—');
                     $('#det-solicitud').text(s.numero_solicitud || '—');
                     $('#det-departamento').text(s.departamento  || '—');
                     $('#det-material').text(s.material          || '—');
                     $('#det-descripcion').text(s.descripcion    || '—');
+
+                    var entregas = response.data.entregas;
+                    $('#det-entregas-tbody').empty();
+
+                    if (!entregas || entregas.length === 0) {
+                        $('#det-entregas-tbody').html(
+                            '<tr><td colspan="6" class="text-center text-muted">Sin entregas adicionales</td></tr>'
+                        );
+                        return;
+                    }
+
+                    $.each(entregas, function (i, e) {
+                        $('#det-entregas-tbody').append(
+                            '<tr>' +
+                            '<td>' + (i + 1) + '</td>' +
+                            '<td>' + formatearFecha(e.fecha_entrega) + '</td>' +
+                            '<td>' + (e.numero_solicitud || '<span class="text-muted">—</span>') + '</td>' +
+                            '<td>' + (e.departamento     || '<span class="text-muted">Sin departamento</span>') + '</td>' +
+                            '<td class="text-center">' + e.cantidad + '</td>' +
+                            '<td>' + (e.observacion      || '<span class="text-muted">—</span>') + '</td>' +
+                            '</tr>'
+                        );
+                    });
                 })
                 .catch(function () { toastr.error('Error al cargar el detalle'); });
         }
@@ -413,19 +441,22 @@
                 .then(function (response) {
                     closeLoading();
                     if (response.data.success !== 1) {
-                        toastr.error('No se pudo cargar la información'); return;
+                        toastr.error('No se pudo cargar la información');
+                        return;
                     }
                     var s = response.data.salida;
                     $('#editar-id').val(s.id);
                     $('#editar-fecha').val(s.fecha ? s.fecha.substring(0, 10) : '');
-                    $('#editar-solicitud').val(s.numero_solicitud ?? '');
-                    $('#editar-descripcion').val(s.descripcion ?? '');
-                    $('#editar-tiposalida').val(s.id_tiposalida ?? '').trigger('change');
+                    $('#editar-solicitud').val(s.numero_solicitud  ?? '');
+                    $('#editar-descripcion').val(s.descripcion     ?? '');
+                    $('#editar-tiposalida').val(s.id_tiposalida    ?? '').trigger('change');
                     $('#editar-departamento').val(s.id_departamento ?? '').trigger('change');
-                    $('#editar-estado').val(s.estado ?? 'finalizado');
                     $('#modalEditar').modal('show');
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al obtener información'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al obtener información');
+                });
         }
 
         function guardarEdicion() {
@@ -435,9 +466,8 @@
             var depto       = $('#editar-departamento').val();
             var solicitud   = $('#editar-solicitud').val().trim();
             var descripcion = $('#editar-descripcion').val().trim();
-            var estado      = $('#editar-estado').val();
 
-            if (!fecha) { toastr.error('La fecha es requerida'); return; }
+            if (!fecha) { toastr.error('La fecha es requerida');          return; }
             if (!tipo)  { toastr.error('El tipo de salida es requerido'); return; }
 
             openLoading();
@@ -448,7 +478,6 @@
             formData.append('id_departamento',  depto);
             formData.append('numero_solicitud', solicitud);
             formData.append('descripcion',      descripcion);
-            formData.append('estado',           estado);
 
             axios.post(RUTA_EDITAR_SAVE, formData)
                 .then(function (response) {
@@ -457,24 +486,29 @@
                         toastr.success('Salida actualizada correctamente');
                         $('#modalEditar').modal('hide');
                         buscarConFiltros();
+                    } else if (response.data.msg) {
+                        toastr.error(response.data.msg);
                     } else {
                         toastr.error('Error al actualizar');
                     }
                 })
-                .catch(function () { closeLoading(); toastr.error('Error al actualizar'); });
+                .catch(function () {
+                    closeLoading();
+                    toastr.error('Error al actualizar');
+                });
         }
 
         // ── Eliminar ──────────────────────────────────────────────────
         function eliminar(id) {
             Swal.fire({
                 title: '¿Eliminar esta salida?',
-                text: 'Esta acción no se puede deshacer.',
-                type: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Sí, eliminar',
-                cancelButtonText: 'Cancelar'
+                text:  'Esta acción no se puede deshacer.',
+                type:  'warning',
+                showCancelButton:    true,
+                confirmButtonColor:  '#d33',
+                cancelButtonColor:   '#6c757d',
+                confirmButtonText:   'Sí, eliminar',
+                cancelButtonText:    'Cancelar'
             }).then(function (result) {
                 if (!result.value) return;
                 openLoading();
@@ -486,11 +520,16 @@
                         if (response.data.success === 1) {
                             toastr.success('Salida eliminada correctamente');
                             buscarConFiltros();
+                        } else if (response.data.msg) {
+                            toastr.error(response.data.msg);
                         } else {
                             toastr.error('Error al eliminar');
                         }
                     })
-                    .catch(function () { closeLoading(); toastr.error('Error al eliminar'); });
+                    .catch(function () {
+                        closeLoading();
+                        toastr.error('Error al eliminar');
+                    });
             });
         }
 

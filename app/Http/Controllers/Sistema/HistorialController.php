@@ -292,7 +292,7 @@ class HistorialController extends Controller
     //***** ========================================================================================= **********
 
 
-// ── Index ─────────────────────────────────────────────────────────────────────
+    // ── Index ─────────────────────────────────────────────────────────────────────
     public function indexHistorialSalidas()
     {
         $arrayTipoSalida    = TipoSalida::orderBy('nombre')->get();
@@ -372,6 +372,7 @@ class HistorialController extends Controller
     }
 
 // ── Editar salida ─────────────────────────────────────────────────────────────
+    // ── Editar salida ─────────────────────────────────────────────────────────────
     public function editarSalida(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -380,7 +381,21 @@ class HistorialController extends Controller
             'id_tiposalida' => 'required|exists:tipo_salida,id',
         ]);
 
-        if ($validator->fails()) return ['success' => 0];
+        if ($validator->fails()) {
+            return ['success' => 0, 'msg' => 'Datos inválidos.'];
+        }
+
+        // ── Validar mes actual en servidor ────────────────────────────
+        $salida      = DB::table('salidas_detalle')->where('id', $request->id)->first();
+        $ahora       = \Carbon\Carbon::now();
+        $fechaSalida = \Carbon\Carbon::parse($salida->fecha);
+
+        if ($fechaSalida->month !== $ahora->month || $fechaSalida->year !== $ahora->year) {
+            return response()->json([
+                'success' => 0,
+                'msg'     => 'Solo se pueden editar salidas del mes actual.',
+            ]);
+        }
 
         try {
             DB::table('salidas_detalle')
@@ -391,17 +406,16 @@ class HistorialController extends Controller
                     'id_departamento'  => $request->id_departamento ?: null,
                     'numero_solicitud' => $request->numero_solicitud ?: null,
                     'descripcion'      => $request->descripcion      ?: null,
-                    'estado'           => in_array($request->estado, ['pendiente', 'finalizado'])
-                        ? $request->estado : 'finalizado',
                 ]);
 
-            return ['success' => 1];
+            return response()->json(['success' => 1]);
 
         } catch (\Throwable $e) {
             Log::error('editarSalida: ' . $e);
-            return ['success' => 99];
+            return response()->json(['success' => 99, 'msg' => 'Error interno al actualizar.']);
         }
     }
+
 
 // ── Eliminar salida ───────────────────────────────────────────────────────────
     public function eliminarSalida(Request $request)
@@ -410,11 +424,24 @@ class HistorialController extends Controller
             'id' => 'required|exists:salidas_detalle,id',
         ]);
 
-        if ($validator->fails()) return ['success' => 0];
+        if ($validator->fails()) {
+            return response()->json(['success' => 0, 'msg' => 'Datos inválidos.']);
+        }
+
+        // ── Validar mes actual en servidor ────────────────────────────
+        $salida      = DB::table('salidas_detalle')->where('id', $request->id)->first();
+        $ahora       = \Carbon\Carbon::now();
+        $fechaSalida = \Carbon\Carbon::parse($salida->fecha);
+
+        if ($fechaSalida->month !== $ahora->month || $fechaSalida->year !== $ahora->year) {
+            return response()->json([
+                'success' => 0,
+                'msg'     => 'Solo se pueden eliminar salidas del mes actual.',
+            ]);
+        }
 
         DB::beginTransaction();
         try {
-            // Eliminar entregas adicionales primero
             DB::table('salidas_detalle_entregas')
                 ->where('id_salida_detalle', $request->id)
                 ->delete();
@@ -424,12 +451,12 @@ class HistorialController extends Controller
                 ->delete();
 
             DB::commit();
-            return ['success' => 1];
+            return response()->json(['success' => 1]);
 
         } catch (\Throwable $e) {
             DB::rollback();
             Log::error('eliminarSalida: ' . $e);
-            return ['success' => 99];
+            return response()->json(['success' => 99, 'msg' => 'Error interno al eliminar.']);
         }
     }
 
