@@ -7,12 +7,13 @@
     <tr>
         <th style="width:4%">ID</th>
         <th style="width:10%">Fecha</th>
-        <th style="width:13%">Tipo Salida</th>
-        <th style="width:13%">Departamento</th>
-        <th style="width:12%">N° Solicitud</th>
-        <th style="width:24%">Material</th>
+        <th style="width:12%">Tipo Salida</th>
+        <th style="width:12%">Departamento</th>
+        <th style="width:10%">N° Solicitud</th>
+        <th style="width:19%">Material</th>
         <th style="width:6%" class="text-center">Cant.</th>
-        <th style="width:18%">Acciones</th>
+        <th style="width:8%">Unidad</th>
+        <th style="width:19%">Acciones</th>
     </tr>
     </thead>
     <tbody>
@@ -31,6 +32,7 @@
             <td>{{ $dato->numero_solicitud ?? '—' }}</td>
             <td>{{ $dato->material }}</td>
             <td class="text-center">{{ $dato->cantidad_salida }}</td>
+            <td>{{ $dato->unidad ?? '—' }}</td>
             <td class="text-center">
 
                 {{-- Ver detalle: siempre visible --}}
@@ -64,7 +66,7 @@
         </tr>
     @empty
         <tr>
-            <td colspan="8" class="text-center text-muted py-4">
+            <td colspan="9" class="text-center text-muted py-4">
                 No se encontraron registros con los filtros aplicados
             </td>
         </tr>

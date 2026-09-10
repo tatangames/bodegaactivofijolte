@@ -152,7 +152,7 @@ class HistorialController extends Controller
         }
 
         $detalle = $entrada->detalle()
-            ->with('material')
+            ->with('material.unidadMedida')
             ->get()
             ->map(function ($item) {
                 $tieneSalidas = SalidasDetalle::where('id_entrada_detalle', $item->id)->exists();
@@ -161,6 +161,7 @@ class HistorialController extends Controller
                     'codigo'           => $item->codigo ?? '',
                     'nombre'           => $item->nombre ?? '',
                     'material'         => $item->material->nombre ?? $item->nombre ?? '',
+                    'unidad'           => $item->material->unidadMedida->nombre ?? '',
                     'cantidad_inicial' => $item->cantidad_inicial,
                     'precio'           => number_format($item->precio, 4),
                     'precio_raw'       => $item->precio,
@@ -308,6 +309,7 @@ class HistorialController extends Controller
         $arraySalidas = DB::table('salidas_detalle as sd')
             ->join('entradas_detalle as ed', 'ed.id', '=', 'sd.id_entrada_detalle')
             ->join('materiales as m', 'm.id', '=', 'ed.id_material')
+            ->leftJoin('unidadmedida as um', 'um.id', '=', 'm.id_medida')
             ->leftJoin('tipo_salida as ts', 'ts.id', '=', 'sd.id_tiposalida')
             ->leftJoin('departamentos as dep', 'dep.id', '=', 'sd.id_departamento')
             ->select(
@@ -317,6 +319,7 @@ class HistorialController extends Controller
                 'sd.descripcion',
                 'sd.cantidad_salida',
                 'm.nombre as material',
+                'um.nombre as unidad',
                 'ts.nombre as tipo_salida',
                 'dep.nombre as departamento',
                 DB::raw('(SELECT COUNT(*) FROM salidas_detalle_entregas WHERE id_salida_detalle = sd.id) as total_entregas')

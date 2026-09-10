@@ -124,6 +124,12 @@
                 </div>
 
                 <div class="modal-body">
+                    <div id="alerta-entradas" class="alert alert-warning d-none" role="alert">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <strong>No se puede editar.</strong>
+                        Este tipo de compra ya tiene entradas registradas.
+                    </div>
+
                     <form id="formulario-editar" onsubmit="event.preventDefault(); editar();">
                         <div class="card-body">
                             <div class="row">
@@ -268,6 +274,11 @@
             openLoading();
             document.getElementById("formulario-editar").reset();
 
+            // Reset estado previo
+            $('#alerta-entradas').addClass('d-none');
+            $('#formulario-editar input').prop('disabled', false);
+            $('#modalEditar .btn-primary').prop('disabled', false).show();
+
             axios.post(urlAdmin+'/admin/tipodecompra/informacion',{
                 'id': id
             })
@@ -278,6 +289,11 @@
                         $('#id-editar').val(response.data.info.id);
                         $('#nombre-editar').val(response.data.info.nombre);
 
+                        if (response.data.tiene_entradas) {
+                            $('#alerta-entradas').removeClass('d-none');
+                            $('#formulario-editar input').prop('disabled', true);
+                            $('#modalEditar .btn-primary').prop('disabled', true).hide();
+                        }
                     }else{
                         toastr.error('Información no encontrada');
                     }
@@ -311,8 +327,9 @@
                         toastr.success('Actualizado correctamente');
                         $('#modalEditar').modal('hide');
                         recargar();
-                    }
-                    else {
+                    } else if (response.data.success === 3) {
+                        toastr.error(response.data.message || 'No se puede editar, tiene entradas registradas');
+                    } else {
                         toastr.error('Error al actualizar');
                     }
                 })

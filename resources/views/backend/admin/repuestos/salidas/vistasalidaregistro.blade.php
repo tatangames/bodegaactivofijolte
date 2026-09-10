@@ -101,7 +101,6 @@
                                     <strong>Campos globales por ítem:</strong>
                                     Si completas los campos a continuación, se copiarán automáticamente en
                                     <strong>todas las filas</strong> que agregues al detalle.
-                                    Podrás editarlos individualmente por fila después.
                                 </div>
 
                                 <div class="row">

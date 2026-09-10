@@ -145,7 +145,7 @@ Route::middleware('auth:admin')->group(function () {
 
     // --- REPORTES ---
     Route::get('/admin/reporte/generales', [ReportesController::class,'vistaReporteGenerales'])->name('admin.reporte.generales.index');
-    Route::get('/admin/reporte/pdf/inventario', [ReportesController::class,'generarPDFExistencias']);
+    Route::get('admin/reporte/pdf/inventario/{conteo}', [ReportesController::class, 'generarPDFExistencias']);
     Route::get('/admin/bodega/reportespdf/inicial/final/{desde}/{hasta}', [ReportesController::class, 'reportePDFInicialPorPeriodos']);
     Route::get('/admin/reporte/pdf/entregados/{desde}/{hasta}/{idunidad}', [ReportesController::class,'generarPDFEntregados']);
     Route::get('/admin/bodega/reportes/pdf/entregadopormaterial/{desde}/{hasta}/{idmaterial}', [ReportesController::class, 'reporteEntregadoPorMaterial']);
@@ -154,7 +154,13 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/admin/informacion/actualizar/px', [ReportesController::class, 'actualizarPxInformacionGeneral'])
         ->name('admin.informacion.actualizar.px');
 
+    // PDF - ITEM ENTREGADO A UNIDADES
+    Route::get('/admin/reporte/entregadopdf/unidades/{idDep}/{desde?}/{hasta?}',
+        [ReportesController::class, 'reportePDFEntregadoAunidades']);
 
+    // pdf - ITEM ENTREGADO A TODAS LAS UNIDADES
+    Route::get('/admin/reporte/entregadopdf/material/{idMat}/{idTipo}/{desde?}/{hasta?}',
+        [ReportesController::class, 'reportePDFEntregadoPorMaterial']);
 
 
 

@@ -115,8 +115,19 @@
                     <div class="card-header">
                         <h3 class="card-title">Listado de Entradas</h3>
                     </div>
-                    <div class="card-body">
-                        <div id="tablaDatatable"></div>
+                    <div class="card-body p-0">
+
+                        {{-- Mensaje inicial: nada cargado hasta que se filtre --}}
+                        <div id="div-instruccion" class="text-center text-muted py-5">
+                            <i class="fas fa-search fa-3x mb-3 d-block"></i>
+                            <p class="mb-0">Utiliza los filtros de arriba y presiona <strong>Filtrar</strong> para ver el historial.</p>
+                        </div>
+
+                        {{-- Tabla real, oculta hasta que se filtre --}}
+                        <div id="div-tabla" style="display:none">
+                            <div id="tablaDatatable"></div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -204,9 +215,10 @@
                                 <tr>
                                     <th style="width:4%">#</th>
                                     <th>Material</th>
-                                    <th style="width:16%">Detalle (opcional)</th>
-                                    <th style="width:10%" class="text-center">Cantidad</th>
-                                    <th style="width:13%" class="text-right">Precio unit.</th>
+                                    <th style="width:14%">Detalle (opcional)</th>
+                                    <th style="width:8%" class="text-center">Cantidad</th>
+                                    <th style="width:8%">Unidad</th>
+                                    <th style="width:12%" class="text-right">Precio unit.</th>
                                     <th style="width:13%" class="text-right">Subtotal</th>
                                     <th style="width:12%" class="text-center">Acciones</th>
                                 </tr>
@@ -214,7 +226,7 @@
                                 <tbody id="detalle-tbody"></tbody>
                                 <tfoot>
                                 <tr class="table-dark">
-                                    <th colspan="5" class="text-right">Total</th>
+                                    <th colspan="6" class="text-right">Total</th>
                                     <th class="text-right" id="detalle-total">$0.00</th>
                                     <th></th>
                                 </tr>
@@ -339,7 +351,7 @@
                 $('#tabla_filter input').addClass('form-control form-control-sm').css('display', 'inline-block');
             }
 
-            // ── Cargar tabla ──────────────────────────────────────
+            // ── Cargar tabla (solo al presionar Filtrar) ───────────
             function cargarTabla() {
 
                 const fechaDesde = $('#filtro-fecha-desde').val();
@@ -362,12 +374,23 @@
                     ? ruta + '?' + params.toString()
                     : ruta;
 
+                // Mostrar tabla y estado "cargando"
+                $('#div-instruccion').hide();
+                $('#div-tabla').show();
+                $('#tablaDatatable').html(
+                    '<div class="text-center text-muted py-5">' +
+                    '<i class="fas fa-spinner fa-spin fa-2x mb-3 d-block"></i>' +
+                    '<p class="mb-0">Cargando historial...</p>' +
+                    '</div>'
+                );
+
                 $('#tablaDatatable').load(url, function () {
                     initDataTable();
                 });
             }
 
-            cargarTabla();
+            // NO se llama cargarTabla() automáticamente al entrar a la vista.
+            // Solo se ejecuta cuando el usuario presiona "Filtrar".
 
             window.recargar = function () {
                 cargarTabla();
@@ -380,7 +403,11 @@
                 $('#filtro-proveedor').val('').trigger('change');
                 $('#filtro-material').val('');
                 $('#filtro-factura').val('');
-                cargarTabla();
+
+                // Vuelve al estado inicial (sin tabla cargada)
+                $('#div-tabla').hide();
+                $('#tablaDatatable').html('');
+                $('#div-instruccion').show();
             };
 
             // ── Select2 ───────────────────────────────────────────
@@ -559,6 +586,7 @@
                                     <td>${fila.material}</td>
                                     <td>${fila.codigo}</td>
                                     <td class="text-center">${fila.cantidad_inicial}</td>
+                                    <td>${fila.unidad ?? '—'}</td>
                                     <td class="text-right">$${fila.precio}</td>
                                     <td class="text-right">$${subtotal.toLocaleString('en-US', {minimumFractionDigits:4, maximumFractionDigits:4})}</td>
                                     <td class="text-center text-nowrap">

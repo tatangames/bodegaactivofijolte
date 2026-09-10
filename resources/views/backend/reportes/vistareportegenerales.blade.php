@@ -96,16 +96,22 @@
                             </p>
                             <hr class="divider">
 
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="toggle-conteo-inventario">
+                                <label class="form-check-label" for="toggle-conteo-inventario" style="font-size:13px;">
+                                    Incluir columna de conteo físico
+                                </label>
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6 d-flex">
                                     <button type="button" onclick="generarPdfInventario()" class="btn-pdf"
                                             style="background: linear-gradient(135deg, #1a4a6b, #1a73e8); color:#fff;
-                               box-shadow: 0 4px 14px rgba(26,115,232,.35); margin-top:0;">
+               box-shadow: 0 4px 14px rgba(26,115,232,.35); margin-top:0;">
                                         <i class="fas fa-file-pdf"></i> Generar PDF
                                     </button>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -118,8 +124,9 @@
                             <h5>Control de Entradas/Salidas por Período</h5>
                         </div>
                         <div class="reporte-body">
-                            <p style="font-size:13px; color:#ff0000; margin-bottom:14px;">
-                                Si el material tuvo todas sus salidas en el mes, sí aparecerá; pero en el siguiente mes ya no aparecerá si ya no tiene unidades.                            </p>
+                            <p style="font-size:13px; color:#666; margin-bottom:14px;">
+                                Muestra saldo inicial, entradas, salidas y saldo final de cada material dentro del rango de fechas seleccionado.
+                            </p>
                             <hr class="divider">
 
                             <div class="fecha-row">
@@ -142,89 +149,95 @@
                     </div>
                 </div>
 
-
-                {{-- ══ ENTREGADO A UNIDAD ══ --}}
+                {{-- ══ REPORTE ENTREGADO A DEPARTAMENTO ══ --}}
                 <div class="col-md-4">
                     <div class="reporte-card">
-                        <div class="reporte-header" style="background: linear-gradient(135deg, #4a1a6b, #8e1ae8);">
+                        <div class="reporte-header" style="background: linear-gradient(135deg, #4a1a6b, #8e44ad);">
                             <i class="fas fa-truck"></i>
-                            <h5>Entregado a Unidad</h5>
+                            <h5>Reporte Entregado a Departamento</h5>
                         </div>
                         <div class="reporte-body">
                             <p style="font-size:13px; color:#666; margin-bottom:14px;">
-                                Detalle de materiales entregados a una unidad/departamento específico en un rango de fechas.
+                                Muestra todos los materiales entregados a la unidad/departamento seleccionado,
+                                con detalle de entregas por salida.
                             </p>
                             <hr class="divider">
 
-                            <div class="fecha-row">
-                                <div class="fecha-box">
-                                    <label>Fecha desde <span class="text-danger">*</span></label>
-                                    <input type="date" id="entregado-fecha-desde" class="form-control form-control-sm">
-                                </div>
-                                <div class="fecha-box">
-                                    <label>Fecha hasta <span class="text-danger">*</span></label>
-                                    <input type="date" id="entregado-fecha-hasta" class="form-control form-control-sm">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
+                            <div style="margin-bottom: 14px;">
                                 <label class="field-label">Unidad / Departamento <span class="text-danger">*</span></label>
-                                <select class="form-control form-control-sm" id="entregado-select-departamento" style="width:100%">
-                                    <option value="">Seleccione...</option>
-                                    @foreach($arrayDepartamento as $dep)
+                                <select id="select-departamento" class="form-control form-control-sm select2-departamento"
+                                        style="width:100%;">
+                                    <option value="">-- Selecciona una unidad --</option>
+                                    @foreach($arrayUnidades as $dep)
                                         <option value="{{ $dep->id }}">{{ $dep->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <button type="button" onclick="generarPdfEntregados()" class="btn-pdf"
-                                    style="background: linear-gradient(135deg, #4a1a6b, #8e1ae8); color:#fff;
-                       box-shadow: 0 4px 14px rgba(142,26,232,.35); margin-top:0;">
+                            <div class="fecha-row">
+                                <div class="fecha-box">
+                                    <label>Fecha desde</label>
+                                    <input type="date" id="unidad-fecha-desde" class="form-control form-control-sm">
+                                </div>
+                                <div class="fecha-box">
+                                    <label>Fecha hasta</label>
+                                    <input type="date" id="unidad-fecha-hasta" class="form-control form-control-sm">
+                                </div>
+                            </div>
+
+
+                            <button type="button" onclick="generarReporteEntregadoUnidades()"
+                                    class="btn-pdf"
+                                    style="background: linear-gradient(135deg, #4a1a6b, #8e44ad); color:#fff;
+                           box-shadow: 0 4px 14px rgba(142,68,173,.35); margin-top:0;">
                                 <i class="fas fa-file-pdf"></i> Generar PDF
                             </button>
                         </div>
                     </div>
                 </div>
 
-
-                {{-- ══ REPORTE POR MATERIAL ══ --}}
-                <div class="col-md-6">
+                {{-- ══ REPORTE POR MATERIAL — qué departamentos han recibido X material ══ --}}
+                <div class="col-md-4">
                     <div class="reporte-card">
-                        <div class="reporte-header" style="background: linear-gradient(135deg, #1a5c6b, #17a2b8);">
-                            <i class="fas fa-cubes"></i>
-                            <h5>Salidas por Material</h5>
+                        <div class="reporte-header" style="background: linear-gradient(135deg, #1a5c4a, #1aad7a);">
+                            <i class="fas fa-box-open"></i>
+                            <h5>Entregas por Material</h5>
                         </div>
                         <div class="reporte-body">
                             <p style="font-size:13px; color:#666; margin-bottom:14px;">
-                                Detalle de salidas de un material específico en un rango de fechas seleccionado.
+                                Selecciona un material para ver a qué unidades/departamentos
+                                se les ha entregado y en qué cantidades.
                             </p>
                             <hr class="divider">
 
-                            <div class="row fecha-row">
-                                <div class="col-md-4 fecha-box">
-                                    <label>Fecha desde <span class="text-danger">*</span></label>
-                                    <input type="date" id="material-fecha-desde" class="form-control form-control-sm">
-                                </div>
-
-                                <div class="col-md-4 fecha-box">
-                                    <label>Fecha hasta <span class="text-danger">*</span></label>
-                                    <input type="date" id="material-fecha-hasta" class="form-control form-control-sm">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
+                            <div style="margin-bottom:12px;">
                                 <label class="field-label">Material <span class="text-danger">*</span></label>
-                                <select class="form-control form-control-sm" id="material-select" style="width:100%">
-                                    <option value="">Seleccione...</option>
+                                <select id="select-material" class="form-control form-control-sm select2-material" style="width:100%;">
+                                    <option value="">-- Selecciona un material --</option>
                                     @foreach($arrayMateriales as $mat)
                                         <option value="{{ $mat->id }}">{{ $mat->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <button type="button" onclick="generarPdfPorMaterial()" class="btn-pdf"
-                                    style="background: linear-gradient(135deg, #1a5c6b, #17a2b8); color:#fff;
-                           box-shadow: 0 4px 14px rgba(23,162,184,.35); margin-top:0;">
+                            <div class="fecha-row">
+                                <div class="fecha-box">
+                                    <label>Fecha desde</label>
+                                    <input type="date" id="mat-fecha-desde" class="form-control form-control-sm">
+                                </div>
+                                <div class="fecha-box">
+                                    <label>Fecha hasta</label>
+                                    <input type="date" id="mat-fecha-hasta" class="form-control form-control-sm">
+                                </div>
+                            </div>
+                            <small class="text-muted" style="font-size:11px; display:block; margin-bottom:10px;">
+                                Las fechas son opcionales. Sin fechas muestra todo el historial.
+                            </small>
+
+                            <button type="button" onclick="generarReportePorMaterial()"
+                                    class="btn-pdf"
+                                    style="background: linear-gradient(135deg, #1a5c4a, #1aad7a); color:#fff;
+                           box-shadow: 0 4px 14px rgba(26,173,122,.35); margin-top:0;">
                                 <i class="fas fa-file-pdf"></i> Generar PDF
                             </button>
                         </div>
@@ -233,69 +246,6 @@
 
 
 
-                {{-- ══ ENTRADAS / SALIDAS POR PERÍODO ══ --}}
-                <div class="col-md-4">
-                    <div class="reporte-card">
-
-                        <div class="reporte-header"
-                             style="background: linear-gradient(135deg, #6b4a1a, #e88e1a);">
-                            <i class="fas fa-exchange-alt"></i>
-                            <h5>Nombre para Firma en Reporte</h5>
-                        </div>
-
-                        <div class="reporte-body">
-
-                            <!-- Nombre -->
-                            <div class="fecha-row">
-                                <div class="fecha-box">
-                                    <label for="nombre-firma">Nombre</label>
-                                    <input type="text"
-                                           id="nombre-firma"
-                                           maxlength="100"
-                                           class="form-control form-control-sm"
-                                           value="{{ $informacionGeneral->nombre_reporte }}">
-                                </div>
-                            </div>
-
-                            <div class="fecha-row">
-                                <div class="fecha-box">
-                                    <label for="nombre-firma">Distancia para Firma</label>
-                                    <input type="number"
-                                           id="px_firmas"
-                                           class="form-control form-control-sm"
-                                           value="{{ $informacionGeneral->px_firmas }}">
-                                </div>
-                            </div>
-
-                            <!-- Salto de página -->
-                            <div class="mt-3">
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox"
-                                           class="custom-control-input"
-                                           id="config-salto-pagina"
-                                        {{ ($informacionGeneral->salto_pagina ?? false) ? 'checked' : '' }}>
-
-                                    <label class="custom-control-label"
-                                           for="config-salto-pagina"
-                                           style="font-size: 13px; padding-top: 2px;">
-                                        Salto de página antes de firma
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Botón -->
-                            <div class="mt-3">
-                                <button type="button"
-                                        class="btn btn-primary"
-                                        onclick="guardarNombreReporte()">
-                                    <i class="fas fa-save mr-1"></i>
-                                    Guardar
-                                </button>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
 
 
 
@@ -313,45 +263,11 @@
     <script src="{{ asset('js/select2.min.js') }}" type="text/javascript"></script>
     <script>
 
-        $('#entregado-select-departamento').select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $('body'),
-            language: { noResults: function () { return 'No encontrado'; } }
-        });
-
-        $('#material-select').select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $('body'),
-            language: { noResults: function () { return 'No encontrado'; } }
-        });
-
-        function generarPdfEntregados() {
-            var desde = document.getElementById('entregado-fecha-desde').value;
-            var hasta = document.getElementById('entregado-fecha-hasta').value;
-            var idDepartamento = document.getElementById('entregado-select-departamento').value;
-
-            if (!desde || !hasta) {
-                toastr.error('Debes seleccionar fecha desde y fecha hasta');
-                return;
-            }
-
-            if (!idDepartamento) {
-                toastr.error('Debes seleccionar una unidad/departamento');
-                return;
-            }
-
-            if (desde > hasta) {
-                toastr.error('La fecha "desde" no puede ser mayor que "hasta"');
-                return;
-            }
-
-            var url = "{{ url('admin/reporte/pdf/entregados') }}/" + desde + '/' + hasta + '/' + idDepartamento;
-            window.open(url, '_blank');
-        }
-
-
         function generarPdfInventario() {
-            window.open("{{ url('admin/reporte/pdf/inventario') }}/", '_blank');
+            var conteo = document.getElementById('toggle-conteo-inventario').checked ? 1 : 0;
+
+            var url = "{{ url('admin/reporte/pdf/inventario') }}/" + conteo;
+            window.open(url, '_blank');
         }
 
         // ── Reporte de Entradas/Salidas por Período ────────────────────
@@ -373,18 +289,37 @@
             window.open(url, '_blank');
         }
 
-        function generarPdfPorMaterial() {
-            var desde  = document.getElementById('material-fecha-desde').value;
-            var hasta  = document.getElementById('material-fecha-hasta').value;
-            var idMat  = document.getElementById('material-select').value;
+        // ── Inicializar Select2 con búsqueda para el select de departamentos ──
+        $(document).ready(function () {
+            $('.select2-departamento').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecciona una unidad --',
+                allowClear: true,
+                language: {
+                    noResults: function () { return "No se encontraron resultados"; },
+                    searching:  function () { return "Buscando..."; }
+                }
+            });
+        });
 
-            if (!desde || !hasta) {
-                toastr.error('Debes seleccionar fecha desde y fecha hasta');
+        // ── Reporte de entregas por departamento ──────────────────────────────
+        function generarReporteEntregadoUnidades() {
+            var idDep = $('#select-departamento').val();
+            var desde = document.getElementById('unidad-fecha-desde').value;
+            var hasta = document.getElementById('unidad-fecha-hasta').value;
+
+            if (!idDep) {
+                toastr.error('Debes seleccionar una unidad/departamento');
                 return;
             }
 
-            if (!idMat) {
-                toastr.error('Debes seleccionar un material');
+            if (!desde) {
+                toastr.error('Debes seleccionar la fecha "desde"');
+                return;
+            }
+
+            if (!hasta) {
+                toastr.error('Debes seleccionar la fecha "hasta"');
                 return;
             }
 
@@ -393,41 +328,80 @@
                 return;
             }
 
-            var url = "{{ url('admin/bodega/reportes/pdf/entregadopormaterial') }}/" + desde + '/' + hasta + '/' + idMat;
+            var url = "{{ url('admin/reporte/entregadopdf/unidades') }}"
+                + '/' + idDep
+                + '/' + desde
+                + '/' + hasta;
+
             window.open(url, '_blank');
         }
 
 
 
-        function guardarNombreReporte(){
-            var nombreFirma = $('#nombre-firma').val().trim();
-            var saltoPagina = $('#config-salto-pagina').is(':checked') ? 1 : 0;
-            const px_firmas = $('#px_firmas').val().trim();
+        // ── Select2 para materiales ───────────────────────────────────────────────────
+        $(document).ready(function () {
+            $('.select2-material').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecciona un material --',
+                allowClear: true,
+                language: {
+                    noResults:  function () { return "No se encontraron resultados"; },
+                    searching:  function () { return "Buscando..."; }
+                }
+            });
+        });
 
-            if (nombreFirma === '') {
-                toastr.error('Debe ingresar un nombre');
+        // ── Generar reporte por material ──────────────────────────────────────────────
+        function generarReportePorMaterial() {
+            var idMat  = $('#select-material').val();
+            var desde  = document.getElementById('mat-fecha-desde').value;
+            var hasta  = document.getElementById('mat-fecha-hasta').value;
+
+            if (!idMat) {
+                toastr.error('Debes seleccionar un material');
                 return;
             }
 
-            axios.post("{{ route('admin.informacion.actualizar.px') }}", {
-                _token: '{{ csrf_token() }}',
-                nombre_reporte: nombreFirma,
-                salto_pagina: saltoPagina,
-                px_firmas: px_firmas,
-            })
-                .then(function (response) {
+            if (desde && hasta && desde > hasta) {
+                toastr.error('La fecha "desde" no puede ser mayor que "hasta"');
+                return;
+            }
 
-                    if (response.data.success === 1) {
-                        toastr.success('Configuración actualizada correctamente');
-                    } else {
-                        toastr.error('No se pudo actualizar la configuración');
-                    }
+            var url = "{{ url('admin/reporte/entregadopdf/material') }}"
+                + '/' + idMat
+                + '/' + (desde || '0')
+                + '/' + (hasta || '0');
 
-                })
-                .catch(function () {
-                    toastr.error('Ocurrió un error al guardar');
-                });
+            window.open(url, '_blank');
         }
+
+
+
+
+
+
+
+
+
+
+        // ── Select2 para material pendiente ──────────────────────────────────────────
+        $(document).ready(function () {
+            $('.select2-material-pendiente').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Selecciona un material --',
+                allowClear: true,
+                language: {
+                    noResults: function () { return "No se encontraron resultados"; },
+                    searching: function () { return "Buscando..."; }
+                }
+            });
+        });
+
+
+
+
+
+
 
     </script>
 @endsection

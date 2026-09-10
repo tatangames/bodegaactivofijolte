@@ -32,9 +32,16 @@ class SalidasDetalle extends Model
         //         'id'             → PK en la tabla materiales
     }
 
-    public function isPendiente(): bool
+
+    public function departamento()
     {
-        return $this->estado === 'pendiente';
+        return $this->belongsTo(Departamentos::class, 'id_departamento', 'id');
     }
+
+    public function tipoSalida()
+    {
+        return $this->belongsTo(TipoSalida::class, 'id_tiposalida', 'id');
+    }
+
 
 }

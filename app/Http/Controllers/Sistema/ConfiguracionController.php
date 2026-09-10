@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Sistema;
 use App\Http\Controllers\Controller;
 use App\Models\Cuenta;
 use App\Models\Departamentos;
+use App\Models\Materiales;
 use App\Models\ObjetoEspecifico;
 use App\Models\Proveedor;
 use App\Models\Rubro;
@@ -75,6 +76,13 @@ class ConfiguracionController extends Controller
 
         if(UnidadMedida::where('id', $request->id)->first()){
 
+            // Verificar si algún material ya tiene asignada esta unidad de medida
+            $tieneMateriales = Materiales::where('id_medida', $request->id)->exists();
+
+            if($tieneMateriales){
+                return ['success' => 3]; // No se puede editar, está en uso
+            }
+
             UnidadMedida::where('id', $request->id)->update([
                 'nombre' => $request->medida
             ]);
@@ -118,44 +126,45 @@ class ConfiguracionController extends Controller
         }
     }
 
-    public function informacionTipoDeCompra(Request $request){
-        $regla = array(
-            'id' => 'required',
-        );
-
+    public function informacionTipoDeCompra(Request $request)
+    {
+        $regla = ['id' => 'required'];
         $validar = Validator::make($request->all(), $regla);
+        if ($validar->fails()) { return ['success' => 0]; }
 
-        if ($validar->fails()){ return ['success' => 0];}
+        $lista = TipoCompra::where('id', $request->id)->first();
+        if (!$lista) { return ['success' => 2]; }
 
-        if($lista = TipoCompra::where('id', $request->id)->first()){
+        $tieneEntradas = $lista->entradas()->exists();
 
-            return ['success' => 1, 'info' => $lista];
-        }else{
-            return ['success' => 2];
-        }
+        return [
+            'success' => 1,
+            'info' => $lista,
+            'tiene_entradas' => $tieneEntradas,
+        ];
     }
 
-    public function editarTipoDeCompra(Request $request){
-
-        $regla = array(
+    public function editarTipoDeCompra(Request $request)
+    {
+        $regla = [
             'id' => 'required',
             'nombre' => 'required'
-        );
+        ];
 
         $validar = Validator::make($request->all(), $regla);
+        if ($validar->fails()) { return ['success' => 0]; }
 
-        if ($validar->fails()){ return ['success' => 0];}
+        $tipo = TipoCompra::where('id', $request->id)->first();
+        if (!$tipo) { return ['success' => 2]; }
 
-        if(TipoCompra::where('id', $request->id)->first()){
-
-            TipoCompra::where('id', $request->id)->update([
-                'nombre' => $request->nombre
-            ]);
-
-            return ['success' => 1];
-        }else{
-            return ['success' => 2];
+        // Bloqueo en backend: si ya tiene entradas asociadas, no se permite editar
+        if ($tipo->entradas()->exists()) {
+            return ['success' => 3, 'message' => 'No se puede editar, este tipo de compra ya tiene entradas registradas.'];
         }
+
+        $tipo->update(['nombre' => $request->nombre]);
+
+        return ['success' => 1];
     }
 
 
@@ -201,14 +210,18 @@ class ConfiguracionController extends Controller
 
         $validar = Validator::make($request->all(), $regla);
 
-        if ($validar->fails()){ return ['success' => 0];}
+        if ($validar->fails()){ return ['success' => 0]; }
 
-        if($lista = Proveedor::where('id', $request->id)->first()){
+        $lista = Proveedor::where('id', $request->id)->first();
+        if (!$lista) { return ['success' => 2]; }
 
-            return ['success' => 1, 'info' => $lista];
-        }else{
-            return ['success' => 2];
-        }
+        $tieneEntradas = $lista->entradas()->exists();
+
+        return [
+            'success' => 1,
+            'info' => $lista,
+            'tiene_entradas' => $tieneEntradas,
+        ];
     }
 
     public function editarProveedor(Request $request){
@@ -220,20 +233,20 @@ class ConfiguracionController extends Controller
 
         $validar = Validator::make($request->all(), $regla);
 
-        if ($validar->fails()){ return ['success' => 0];}
+        if ($validar->fails()){ return ['success' => 0]; }
 
-        if(Proveedor::where('id', $request->id)->first()){
+        $proveedor = Proveedor::where('id', $request->id)->first();
+        if (!$proveedor) { return ['success' => 2]; }
 
-            Proveedor::where('id', $request->id)->update([
-                'nombre' => $request->nombre
-            ]);
-
-            return ['success' => 1];
-        }else{
-            return ['success' => 2];
+        // Bloqueo en backend: si ya tiene entradas asociadas, no se permite editar
+        if ($proveedor->entradas()->exists()) {
+            return ['success' => 3, 'message' => 'No se puede editar, este proveedor ya tiene entradas registradas.'];
         }
-    }
 
+        $proveedor->update(['nombre' => $request->nombre]);
+
+        return ['success' => 1];
+    }
 
 
 
@@ -419,7 +432,15 @@ class ConfiguracionController extends Controller
         if ($validar->fails()) { return ['success' => 0]; }
 
         $dato = ObjetoEspecifico::find($request->id);
-        return $dato ? ['success' => 1, 'info' => $dato] : ['success' => 2];
+        if (!$dato) { return ['success' => 2]; }
+
+        $tieneMateriales = $dato->materiales()->exists();
+
+        return [
+            'success' => 1,
+            'info' => $dato,
+            'tiene_materiales' => $tieneMateriales,
+        ];
     }
 
     public function editarObjetoEspecifico(Request $request)
@@ -435,6 +456,11 @@ class ConfiguracionController extends Controller
 
         $dato = ObjetoEspecifico::find($request->id);
         if (!$dato) { return ['success' => 2]; }
+
+        // Bloqueo también en backend: si ya tiene materiales asignados, no se permite editar
+        if ($dato->materiales()->exists()) {
+            return ['success' => 3, 'message' => 'No se puede editar, el objeto específico ya tiene materiales asignados.'];
+        }
 
         $dato->id_cuenta = $request->id_cuenta;
         $dato->codigo    = $request->codigo;
